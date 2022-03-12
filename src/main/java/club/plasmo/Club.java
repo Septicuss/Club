@@ -1,12 +1,12 @@
 package club.plasmo;
 
+import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.google.gson.Gson;
 
 import club.plasmo.chat.ChatListener;
-import club.plasmo.player.ClubPlayer;
-import club.plasmo.player.ClubPlayerData;
+import club.plasmo.commands.AuthorizationCommands;
 import club.plasmo.player.ClubPlayerManager;
 
 public class Club extends JavaPlugin {
@@ -26,16 +26,18 @@ public class Club extends JavaPlugin {
 
 		new ChatListener(instance);
 		new MainListener(instance);
+		
+		new AuthorizationCommands(instance);
 
 		this.gson = new Gson();
 		this.clubPlayerManager = new ClubPlayerManager(this.gson, this.getDataFolder());
+		
+		if (this.getServer().getWorld("club") == null) {
+			WorldCreator creator = new WorldCreator("club");
+			creator.generator(new BukkitGenerator());
 
-		ClubPlayer player = clubPlayerManager.get("Septicuss");
-		ClubPlayerData playerData = player.getData();
-
-		playerData.set("test", 500);
-
-		clubPlayerManager.save(player);
+			this.getServer().createWorld(creator);
+		}
 	}
 
 	public static Club get() {
