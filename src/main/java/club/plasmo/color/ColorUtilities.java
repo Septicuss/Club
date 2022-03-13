@@ -1,4 +1,4 @@
-package club.plasmo.chat;
+package club.plasmo.color;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

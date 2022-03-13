@@ -1,4 +1,4 @@
-package club.plasmo.chat;
+package club.plasmo.color;
 
 public class ColorPalette {
 

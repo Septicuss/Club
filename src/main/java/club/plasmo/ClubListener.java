@@ -10,18 +10,18 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import club.plasmo.chat.ColorPalette;
-import club.plasmo.chat.ColorUtilities;
+import club.plasmo.color.ColorPalette;
+import club.plasmo.color.ColorUtilities;
 import club.plasmo.player.ClubPlayer;
 import club.plasmo.player.ClubPlayerData;
 
-public class MainListener implements Listener {
+public class ClubListener implements Listener {
 
 	private static final ColorPalette PALETTE = ColorUtilities.mainColorPalette;
 	
 	private Club club;
 
-	public MainListener(Club club) {
+	public ClubListener(Club club) {
 		this.club = club;
 		this.club.getServer().getPluginManager().registerEvents(this, club);
 	}
@@ -38,9 +38,9 @@ public class MainListener implements Listener {
 		setupTab(e.getPlayer());
 
 		if (!needToLogin(e.getPlayer())) {
-			e.getPlayer().sendMessage(PALETTE.getSecondColor() + "Зарегайся или залогинься");
 			e.getPlayer().teleport(club.getServer().getWorld("club").getSpawnLocation());
 		} else {
+			e.getPlayer().sendMessage(PALETTE.getSecondColor() + "Зарегайся или залогинься");
 			e.getPlayer().teleport(new Location(club.getServer().getWorld("club"), 14, 79, 88));
 		}
 
@@ -61,6 +61,9 @@ public class MainListener implements Listener {
 
 	@EventHandler
 	public void onDamage(EntityDamageEvent event) {
+		if(!(event.getEntity() instanceof Player)) {
+			return;
+		}
 		event.setCancelled(true);
 	}
 

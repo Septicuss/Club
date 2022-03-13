@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import club.plasmo.Club;
-import club.plasmo.chat.ColorUtilities;
+import club.plasmo.color.ColorUtilities;
 import club.plasmo.player.ClubPlayer;
 import club.plasmo.player.ClubPlayerData;
 

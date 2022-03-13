@@ -7,7 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import club.plasmo.chat.ChatListener;
+import club.plasmo.commands.AdminCommands;
 import club.plasmo.commands.AuthorizationCommands;
+import club.plasmo.mechanics.MechanicsManager;
 import club.plasmo.player.ClubPlayerManager;
 
 public class Club extends JavaPlugin {
@@ -16,6 +18,7 @@ public class Club extends JavaPlugin {
 
 	private Gson gson;
 	private ClubPlayerManager clubPlayerManager;
+	private MechanicsManager mechanicsManager;
 
 	public void onLoad() {
 		instance = this;
@@ -26,10 +29,13 @@ public class Club extends JavaPlugin {
 		instance = this;
 
 		new ChatListener(instance);
-		new MainListener(instance);
+		new ClubListener(instance);
 
 		new AuthorizationCommands(instance);
-
+		new AdminCommands(instance);
+		
+		this.mechanicsManager = new MechanicsManager(instance);
+		
 		this.gson = new GsonBuilder().setLenient().create();
 		this.clubPlayerManager = new ClubPlayerManager(this.gson, this.getDataFolder());
 
@@ -51,6 +57,10 @@ public class Club extends JavaPlugin {
 
 	public ClubPlayerManager getClubPlayerManager() {
 		return clubPlayerManager;
+	}
+
+	public MechanicsManager getMechanicsManager() {
+		return mechanicsManager;
 	}
 
 }

@@ -7,6 +7,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import club.plasmo.Club;
+import club.plasmo.color.ColorUtilities;
 
 public class ChatListener implements Listener {
 
