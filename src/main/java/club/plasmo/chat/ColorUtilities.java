@@ -6,10 +6,10 @@ import java.util.regex.Pattern;
 import net.md_5.bungee.api.ChatColor;
 
 public class ColorUtilities {
+	
 	public final static ColorPalette mainColorPalette = new ColorPalette("#E8871E", "#EDB458", "#D4D4AA", "#BAD4AA", "#EBF5DF");
 	private final static char COLOR_CHAR = ChatColor.COLOR_CHAR;
 
-	
 	public static String color(String message) {
 		final Pattern hexPattern = Pattern.compile("#" + "([A-Fa-f0-9]{6})");
 		Matcher matcher = hexPattern.matcher(message);

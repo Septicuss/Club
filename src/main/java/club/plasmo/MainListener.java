@@ -8,34 +8,55 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.player.PlayerQuitEvent;
 
+import club.plasmo.chat.ColorPalette;
 import club.plasmo.chat.ColorUtilities;
 import club.plasmo.player.ClubPlayer;
+import club.plasmo.player.ClubPlayerData;
 
 public class MainListener implements Listener {
 
-	public MainListener(JavaPlugin plugin) {
-		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+	private static final ColorPalette PALETTE = ColorUtilities.mainColorPalette;
+	
+	private Club club;
 
+	public MainListener(Club club) {
+		this.club = club;
+		this.club.getServer().getPluginManager().registerEvents(this, club);
 	}
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onJoin(PlayerJoinEvent e) {
-		e.setJoinMessage(ColorUtilities.color(ColorUtilities.mainColorPalette.getFirstColor() + e.getPlayer().getName()
-				+ ColorUtilities.mainColorPalette.getColor(4) + " зашёл в клуб."));
+
+		club.getClubPlayerManager().get(e.getPlayer().getName()); // Cache player
+
+		e.setJoinMessage(ColorUtilities.color(PALETTE.getFirstColor() + e.getPlayer().getName()
+				+ PALETTE.getColor(4) + " зашёл в клуб."));
 		e.getPlayer().setGameMode(GameMode.ADVENTURE);
 		e.getPlayer().setFoodLevel(20);
 		setupTab(e.getPlayer());
 
 		if (!needToLogin(e.getPlayer())) {
-			e.getPlayer().sendMessage(
-					ColorUtilities.mainColorPalette.getSecondColor() + "Зарегайся или залогинься");
-			e.getPlayer().teleport(Club.get().getServer().getWorld("club").getSpawnLocation());
+			e.getPlayer().sendMessage(PALETTE.getSecondColor() + "Зарегайся или залогинься");
+			e.getPlayer().teleport(club.getServer().getWorld("club").getSpawnLocation());
 		} else {
-			e.getPlayer().teleport(new Location(Club.get().getServer().getWorld("club"), 14, 79, 88));
+			e.getPlayer().teleport(new Location(club.getServer().getWorld("club"), 14, 79, 88));
 		}
 
+	}
+
+	/*-
+	 * Used to handle ClubPlayer garbage collection 
+	 * (Removing old entries from cache)
+	 */
+	@EventHandler
+	public void onQuit(PlayerQuitEvent event) {
+		final long lastOnline = System.currentTimeMillis();
+		final ClubPlayer clubPlayer = getClubPlayer(event.getPlayer().getName());
+
+		final ClubPlayerData data = clubPlayer.getData();
+		data.set("lastonline", lastOnline);
 	}
 
 	@EventHandler
@@ -48,19 +69,24 @@ public class MainListener implements Listener {
 		player.setPlayerListName(ColorUtilities.color(player.getName()));
 
 		player.setPlayerListHeader(
-				ColorUtilities.color(ColorUtilities.mainColorPalette.getFirstColor() + "\n   Plasmo Club   \n"));
+				ColorUtilities.color(PALETTE.getFirstColor() + "\n   Plasmo Club   \n"));
 		player.setPlayerListFooter("\n");
+
 	}
 
-	public boolean needToLogin(Player player) {
-		ClubPlayer cPlayer = Club.get().getClubPlayerManager().get(player.getName());
-		
-		String IP = player.getAddress().toString().substring(0, player.getAddress().toString().length()-6);
+	private boolean needToLogin(Player player) {
+		ClubPlayer cPlayer = club.getClubPlayerManager().get(player.getName());
+
+		String IP = player.getAddress().toString().substring(0, player.getAddress().toString().length() - 6);
 		if (cPlayer.getData().get("password") == null) {
 			return true;
-		} else if (!(((String)cPlayer.getData().get("lastIP")).equals(IP))) {
+		} else if (!(((String) cPlayer.getData().get("lastIP")).equals(IP))) {
 			return true;
 		}
 		return false;
+	}
+
+	private ClubPlayer getClubPlayer(final String name) {
+		return this.club.getClubPlayerManager().get(name);
 	}
 }

@@ -6,14 +6,21 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
 import com.google.gson.Gson;
 
+import club.plasmo.Club;
 import club.plasmo.player.events.ClubPlayerCreateEvent;
 
 public class ClubPlayerManager {
 
 	/* Path to the player data folder, where json files are stored */
 	private static final String PATH = "data/players";
+
+	/* Defines how often the cache garbage collector is ran (seconds) */
+	private static final long GARBAGE_COLLECTOR_DELAY = 180;
 
 	private Gson gson;
 	private File pluginDataFolder;
@@ -23,43 +30,61 @@ public class ClubPlayerManager {
 		this.gson = gson;
 		this.pluginDataFolder = pluginDataFolder;
 		this.clubPlayerCache = new ConcurrentHashMap<>();
+
+		runCacheGarbageCollector();
 	}
 
 	// Public Getters
 
 	public void save(ClubPlayer clubPlayer) {
 		final File playerFile = getPlayerFile(clubPlayer.getName());
-		final String json = gson.toJson(clubPlayer);
-
-		try {
-			if (!playerFile.exists()) {
-				playerFile.getParentFile().mkdirs();
-				playerFile.createNewFile();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-
-		try {
-			Files.writeString(playerFile.toPath(), json, StandardOpenOption.WRITE);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		save(playerFile, clubPlayer);
 	}
 
 	public ClubPlayer get(String name) {
-		if (isCached(name)) {
-			return getCached(name);
-		}
+		return (isCached(name) ? getCached(name) : loadOrCreateNew(name));
+	}
 
-		return loadOrCreateNew(name);
+	public void saveCached() {
+		for (ClubPlayer clubPlayer : clubPlayerCache.values()) {
+			save(clubPlayer);
+		}
 	}
 
 	// Caching
 
 	private void runCacheGarbageCollector() {
 
+		Bukkit.getScheduler().runTaskTimer(Club.get(), () -> {
+
+			for (ClubPlayer clubPlayer : clubPlayerCache.values()) {
+				if (!isGarbage(clubPlayer)) {
+					continue;
+				}
+
+				save(clubPlayer);
+				removeFromCache(clubPlayer.getName());
+			}
+
+		}, GARBAGE_COLLECTOR_DELAY, GARBAGE_COLLECTOR_DELAY);
+
+	}
+
+	private boolean isGarbage(ClubPlayer cachedClubPlayer) {
+		if (cachedClubPlayer == null)
+			return true;
+
+		final Player player = cachedClubPlayer.getPlayer();
+		final boolean online = player != null && player.isOnline();
+
+		if (online)
+			return false;
+
+		final ClubPlayerData playerData = cachedClubPlayer.getData();
+		final long lastOnline = (long) playerData.get("lastonline");
+
+		final long timeSinceLogOff = System.currentTimeMillis() - lastOnline;
+		return timeSinceLogOff >= (GARBAGE_COLLECTOR_DELAY * 1000);
 	}
 
 	private boolean isCached(String name) {
@@ -80,6 +105,21 @@ public class ClubPlayerManager {
 
 	// Loading
 
+	private void save(File playerFile, ClubPlayer clubPlayer) {
+		try {
+			final String json = gson.toJson(clubPlayer);
+
+			if (!playerFile.exists()) {
+				playerFile.getParentFile().mkdirs();
+				playerFile.createNewFile();
+			}
+
+			Files.writeString(playerFile.toPath(), json, StandardOpenOption.WRITE);
+		} catch (IOException exception) {
+			exception.printStackTrace();
+		}
+	}
+
 	private ClubPlayer loadOrCreateNew(String name) {
 		final File playerFile = getPlayerFile(name);
 
@@ -94,7 +134,10 @@ public class ClubPlayerManager {
 				return createNew(name);
 			}
 
-			return gson.fromJson(json, ClubPlayer.class);
+			ClubPlayer clubPlayer = gson.fromJson(json, ClubPlayer.class);
+			addToCache(clubPlayer);
+
+			return clubPlayer;
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;

@@ -1,5 +1,8 @@
 package club.plasmo.player;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+
 public class ClubPlayer {
 
 	private String name;
@@ -16,6 +19,10 @@ public class ClubPlayer {
 
 	public ClubPlayerData getData() {
 		return data;
+	}
+
+	public Player getPlayer() {
+		return Bukkit.getPlayer(name);
 	}
 
 }

@@ -15,6 +15,10 @@ public class ClubPlayerData {
 		this.dataMap = dataMap;
 	}
 
+	public boolean has(String key) {
+		return this.dataMap.containsKey(key);
+	}
+
 	public void set(String key, Object object) {
 		this.dataMap.put(key, object);
 	}
